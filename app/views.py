@@ -1,18 +1,21 @@
 import string
 
+from django.http import HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.db import connection
 from django.core.mail import send_mail
 import random
-
-
 
 # Create your views here.
 def xyz(request):
     return render(request, "home1.html")
 
 
+
 def signup(request):
+    if request.method == 'GET':
+        return render(request,"index.html")
     email = request.POST['emailname']
     psw = request.POST['pswname']
     cno = request.POST['contactno']
@@ -20,7 +23,7 @@ def signup(request):
     lname = request.POST['lastname']
 
     cursor = connection.cursor()
-    query1 = "select * from users where email=%s"
+    query1 = "select * from users where email=%s"  # email='" + "email'"
     value1 = email
     cursor .execute(query1, value1)
     data = cursor.fetchall()
@@ -50,18 +53,15 @@ def signup(request):
 def signin(request):
     return render(request, "login.html")
 
-
-
-
 def login(request):
+    if request.method == 'GET':
+        return render(request,"login.html")
     email = request.POST['emailname']
     psw = request.POST['pswname']
-    cno = request.post['contactno']
-
     cursor = connection.cursor()
-    query1 = "select * from users where email=%s"
+    query1 = "select * from users where email = %s" #.format(email)
     value1 = email
-    cursor.execute(query1, value1)
+    cursor.execute(query1,value1)
     data = cursor.fetchone()
     if data is None:
         data = {"email": "not signed up", "password": ""}
@@ -71,8 +71,13 @@ def login(request):
             data = {"email": "you are not a verified user", "password": ""}
             return render(request, "first.html", data)
         if data[1] == psw:
-            data = {"email": "Login Success", "password": ""}
-            return render(request, "first.html", data)
+            cursor = connection.cursor()
+            query1 = "select * from links where created_by=%s"
+            value1 = email
+            cursor.execute(query1, value1)
+            data = cursor.fetchall()
+            data = {"data": data}
+            return render(request, "output.html", data)
 
         else:
             data = {"email": "password is not correct", "password": ""}
@@ -125,7 +130,7 @@ def urlshortner(request):
             query2 = "insert into links (long_link, short_link) values (%s,%s)"
             value = (longlink, customurl)
             cursor.execute(query2, value)
-            data = {"email": "Your url is shorten with classy.co/"+customurl}
+            data = {"email": "Your url is shorten with classy.go/"+customurl}
             return render(request, "first.html", data)
     if shorturl is not None or shorturl != '':
         while True:
@@ -140,7 +145,7 @@ def urlshortner(request):
         query2 = "insert into links(long_link, short_link) values (%s,%s)"
         value = (longlink, shorturl)
         cursor.execute(query2, value)
-        data = {"email": "Your url is shorten with classy.co/"+shorturl}
+        data = {"email": "Your url is shorten with classy.go/"+shorturl}
         return render(request, "first.html", data)
 
 def HandlingUrl (request,**kwargs):
@@ -155,25 +160,18 @@ def HandlingUrl (request,**kwargs):
     else:
         return redirect(data[0])
 
+def edit(request):
+    id = request.GET['id']
+    cursor = connection.cursor()
+    query1 = "select * from links where id=%s"
+    value1 = id
+    cursor.execute(query1, value1)
+    data = cursor.fetchone()
+    return render(request, "editurl.html", data)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+def  generateShortURLApi(request):
+    letters = string.ascii_letters + string.digits
+    shorturl = ''
+    for i in range(6):
+        shorturl = shorturl + "".join(random.choice(letters))
+    return JsonResponse({"shorturl": shorturl, "response": "success"})

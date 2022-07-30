@@ -1,4 +1,5 @@
-from app.views import xyz,signup
+from app.views import xyz, signup, signin, login, otpVerification, urlshortner, HandlingUrl, edit, generateShortURLApi
+
 """application URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
@@ -20,5 +21,14 @@ from django.urls import path
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('xyz/', xyz),
-    path('signup',signup)
+    path('signin/', signin),
+    path('signup', signup),
+    path('login', login),
+    path('otpVerification', otpVerification),
+    path('urlshortner', urlshortner),
+    path('<url>/', HandlingUrl),
+    path('edit', edit),
+    path('generateShortURLApi', generateShortURLApi),
+
+
 ]
